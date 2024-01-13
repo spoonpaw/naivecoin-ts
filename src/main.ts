@@ -10,6 +10,8 @@ import {
 import {connectToPeers, getSockets, initP2PServer, isExtendedWebSocket} from "./p2p";
 import {getPublicFromWallet, initWallet} from './wallet';
 import {getTransactionPool} from "./transactionPool";
+import {UnspentTxOut} from "./transaction";
+import _ from "lodash";
 
 const httpPort: number = parseInt(process.env.HTTP_PORT ?? "3001");
 const p2pPort: number = parseInt(process.env.P2P_PORT ?? "6001");
@@ -132,6 +134,25 @@ const initHttpServer = (myHttpPort: number) => {
     app.post('/stop', (req, res) => {
         res.send({'msg': 'stopping server'});
         process.exit();
+    });
+
+    app.get('/block/:hash', (req, res) => {
+        const block = _.find(getBlockchain(), {'hash' : req.params.hash});
+        res.send(block);
+    });
+
+    app.get('/transaction/:id', (req, res) => {
+        const tx = _(getBlockchain())
+            .map((blocks) => blocks.data)
+            .flatten()
+            .find({'id': req.params.id});
+        res.send(tx);
+    });
+
+    app.get('/address/:address', (req, res) => {
+        const unspentTxOuts: UnspentTxOut[] =
+            _.filter(getUnspentTxOuts(), (uTxO) => uTxO.address === req.params.address)
+        res.send({'unspentTxOuts': unspentTxOuts});
     });
 
     app.listen(myHttpPort, () => {

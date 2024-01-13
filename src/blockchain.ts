@@ -233,11 +233,19 @@ const hashMatchesBlockContent = (block: Block): boolean => {
 const hashMatchesDifficulty = (hash: string, difficulty: number): boolean => {
 	const hashInBinary: string | null = hexToBinary(hash);
 	if (hashInBinary === null) {
-		// Handle the case where the hash could not be converted to binary (invalid hash)
 		return false;
 	}
-	const requiredPrefix: string = '0'.repeat(difficulty);
-	return hashInBinary.startsWith(requiredPrefix);
+
+	if (difficulty < 0 || !Number.isInteger(difficulty)) {
+		return false;
+	}
+
+	try {
+		const requiredPrefix: string = '0'.repeat(difficulty);
+		return hashInBinary.startsWith(requiredPrefix);
+	} catch (error) {
+		return false;
+	}
 };
 
 /*
